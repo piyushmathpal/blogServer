@@ -82,7 +82,10 @@ app.post("/login", async (req, res) => {
         if (err) throw err;
         res.header("Access-Control-Allow-Origin", "https://vocal-treacle-8a2496.netlify.app");
         res.header("Access-Control-Allow-Credentials", "true");
-        res.cookie("token", token)
+        res.cookie("token", token,{
+          maxAge: 900000,
+          httpOnly: true
+        })
         res.send({
           id: userDoc._id,
           username,
@@ -98,9 +101,9 @@ app.post("/login", async (req, res) => {
 
 app.get("/profile", (req, res) => {
   const { token } = req.cookies;
-  if (!token) {
-    res.cookie("token", "").json("ok");
-  }
+  // if (!token) {
+  //   res.cookie("token", "").json("ok");
+  // }
   // console.log(window.sessionStorage.getItem('token'));
   jwt.verify(token, secret, {}, (err, info) => {
     if (err) throw err;
