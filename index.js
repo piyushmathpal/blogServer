@@ -21,7 +21,7 @@ const cloudinary = require("cloudinary");
 const salt = bcrypt.genSaltSync(10);
 const secret = 'asdfe45we45w345wegw345werjktjwertkj';
 
-app.use(cors({credentials:true,origin:'http://localhost:3000'}));
+app.use(cors({credentials:true,origin:'https://646f319330dd6c2c4d5cca98--vocal-treacle-8a2496.netlify.app'}));
 app.use(express.json());
 app.use(cookieParser());
 
@@ -89,7 +89,7 @@ app.post('/register', async (req,res) => {
     if(!token){
       res.cookie('token', '').json('ok');
     }
-    
+    // console.log(window.sessionStorage.getItem('token'));
     jwt.verify(token, secret, {}, (err,info) => {
       if (err) throw err;
       res.json(info);
@@ -125,6 +125,7 @@ app.post('/register', async (req,res) => {
 
     try{
       const {token} = req.cookies;
+      
     jwt.verify(token, secret, {}, async (err,info) => {
       if (err) throw err;
       const {id,title,summary,content} = req.body;
