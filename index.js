@@ -125,8 +125,8 @@ app.post('/register', async (req,res) => {
 
     try{
       const {token} = req.cookies;
-      
-    jwt.verify(token, secret, {}, async (err,info) => {
+      console.log(token,'33')
+       jwt.verify(token, secret, {}, async (err,info) => {
       if (err) throw err;
       const {id,title,summary,content} = req.body;
       let postDoc = await Post.findById(id);
