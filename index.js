@@ -25,11 +25,13 @@ var whitelist = ["https://vocal-treacle-8a2496.netlify.app"];
 var corsOptions = {
   credentials: true,
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
-    }
+    console.log(origin);
+    callback(null, true);
+    // if (whitelist.indexOf(origin) !== -1) {
+    //   callback(null, true);
+    // } else {
+    //   callback(new Error("Not allowed by CORS"));
+    // }
   },
 };
 
@@ -78,14 +80,17 @@ app.post("/login", async (req, res) => {
     if (passOk) {
       // logged in
       jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-        console.log(token)
+        console.log(token);
         if (err) throw err;
-        res.header("Access-Control-Allow-Origin", "https://vocal-treacle-8a2496.netlify.app");
+        res.header(
+          "Access-Control-Allow-Origin",
+          "https://vocal-treacle-8a2496.netlify.app"
+        );
         res.header("Access-Control-Allow-Credentials", "true");
-        res.cookie("token", token,{
+        res.cookie("token", token, {
           maxAge: 900000,
-          httpOnly: true
-        })
+          httpOnly: true,
+        });
         res.send({
           id: userDoc._id,
           username,
