@@ -79,7 +79,10 @@ app.post("/login", async (req, res) => {
       // logged in
       jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
         if (err) throw err;
-        res.cookie("token", token).json({
+        res.header("Access-Control-Allow-Origin", "https://vocal-treacle-8a2496.netlify.app");
+        res.header("Access-Control-Allow-Credentials", "true");
+        res.cookie("token", token)
+        res.send({
           id: userDoc._id,
           username,
         });
