@@ -55,7 +55,7 @@ app.post('/register', async (req,res) => {
           username,
         });
       });
-    } catch(e) {
+    }catch(e) {
       console.log(e);
       res.status(400).json({"error":e.message});
     }
@@ -121,13 +121,10 @@ app.post('/register', async (req,res) => {
   });
   
   app.put('/post',uploader.single('file'), async (req,res) => {
-    let newPath = null;
-    if (req.file) {
-      const upload = await cloudinary.v2.uploader.upload(req.file.path);
-      newPath=upload.secure_url;
-    }
-  
-    const {token} = req.cookies;
+   
+
+    try{
+      const {token} = req.cookies;
     jwt.verify(token, secret, {}, async (err,info) => {
       if (err) throw err;
       const {id,title,summary,content} = req.body;
@@ -136,10 +133,15 @@ app.post('/register', async (req,res) => {
       if (!isAuthor) {
         return res.status(400).json('you are not the author');
       }
-      const oldUrl = postDoc.cover
-      const getPublicId = (oldUrl) => oldUrl.split("/").pop().split(".")[0]
-      const deleted = await cloudinary.v2.uploader.destroy(getPublicId(oldUrl))
-      console.log(deleted)
+      let newPath = postDoc.cover;
+      if (req.file) {
+        const upload = await cloudinary.v2.uploader.upload(req.file.path);
+        newPath=upload.secure_url;
+        const oldUrl = postDoc.cover
+        const getPublicId = (oldUrl) => oldUrl.split("/").pop().split(".")[0]
+        const deleted = await cloudinary.v2.uploader.destroy(getPublicId(oldUrl))
+      }
+      
       console.log(postDoc)
       await postDoc.updateOne({
         title,
@@ -150,6 +152,10 @@ app.post('/register', async (req,res) => {
   
       res.json(postDoc);
     });
+    }catch(e){
+      console.log(e);
+      res.status(500).json({message:"something went wrong"})
+    }
   
   });
 
