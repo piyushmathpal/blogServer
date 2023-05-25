@@ -33,7 +33,7 @@ var corsOptions = {
   },
 };
 
-server.use(cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
