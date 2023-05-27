@@ -20,19 +20,9 @@ const uploader = multer({
 const cloudinary = require("cloudinary");
 const salt = bcrypt.genSaltSync(10);
 const secret = "asdfe45we45w345wegw345werjktjwertkj";
-
-var whitelist = ["https://vocal-treacle-8a2496.netlify.app"];
 var corsOptions = {
   credentials: true,
-  origin: function (origin, callback) {
-    console.log(origin);
-    callback(null, true);
-    // if (whitelist.indexOf(origin) !== -1) {
-    //   callback(null, true);
-    // } else {
-    //   callback(new Error("Not allowed by CORS"));
-    // }
-  },
+  origin: true
 };
 
 app.use(cors(corsOptions));
@@ -55,14 +45,22 @@ app.post("/register", async (req, res) => {
       username,
       password: bcrypt.hashSync(password, salt),
     });
-    jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-      if (err) throw err;
-      console.log(token);
-      res.cookie("token", token).json({
-        id: userDoc._id,
-        username,
-      });
-    });
+    jwt.sign(
+      { username, id: userDoc._id },
+      secret,
+      {
+        expiresIn: "1h",
+      },
+      (err, token) => {
+        if (err) throw err;
+        console.log(token);
+        res.cookie("token", token).json({
+          token,
+          id: userDoc._id,
+          username,
+        });
+      }
+    );
   } catch (e) {
     console.log(e);
     res.status(400).json({ error: e.message });
@@ -72,25 +70,30 @@ app.post("/register", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { username, password } = req.body;
-    console.log(req.body);
+    // console.log(req.body);
     const userDoc = await User.findOne({ username });
     const passOk = bcrypt.compareSync(password, userDoc.password);
     console.log(passOk);
 
     if (passOk) {
       // logged in
-      jwt.sign({ username, id: userDoc._id }, secret, {}, (err, token) => {
-        console.log(token);
-        if (err) throw err;
-        res.cookie("token", token, {
-          maxAge: 900000,
-          httpOnly: true,
-        });
-        res.send({
-          id: userDoc._id,
-          username,
-        });
-      });
+      jwt.sign(
+        { username, id: userDoc._id },
+        secret,
+        {
+          expiresIn: "1h",
+        },
+        (err, token) => {
+          // console.log(token);
+          if (err) throw err;
+          res.cookie("token", token);
+          res.send({
+            id: userDoc._id,
+            username,
+            token,
+          });
+        }
+      );
     } else {
       res.status(400).json("wrong credentials");
     }
@@ -100,7 +103,9 @@ app.post("/login", async (req, res) => {
 });
 
 app.get("/profile", (req, res) => {
-  const token = req.cookies[token];
+  // const {token} = req.cookies;
+  let token = req.headers["x-access-token"];
+  if (!token || token == 'undefined' || token == 'null') return res.status(400).json({error: "No token in headers"})
   jwt.verify(token, secret, {}, (err, info) => {
     if (err) throw err;
     res.json(info);
@@ -115,7 +120,8 @@ app.post("/post", uploader.single("file"), async (req, res) => {
   const upload = await cloudinary.v2.uploader.upload(req.file.path);
   console.log(upload);
 
-  const { token } = req.cookies;
+  // const { token } = req.cookies;
+  const token = req.headers["x-access-token"];
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) throw err;
     const { title, summary, content } = req.body;
@@ -132,7 +138,8 @@ app.post("/post", uploader.single("file"), async (req, res) => {
 
 app.put("/post", uploader.single("file"), async (req, res) => {
   try {
-    const { token } = req.cookies;
+    // const { token } = req.cookies;
+    const token = req.headers["x-access-token"];
     console.log(token, "33");
     jwt.verify(token, secret, {}, async (err, info) => {
       if (err) throw err;
@@ -171,7 +178,8 @@ app.put("/post", uploader.single("file"), async (req, res) => {
 });
 
 app.delete("/post/:id", async (req, res) => {
-  const { token } = req.cookies;
+  // const { token } = req.cookies;
+  const token = req.headers['x-access-token']
   jwt.verify(token, secret, {}, async (err, info) => {
     if (err) throw err;
     const postDoc = await Post.findById(req.params.id);
