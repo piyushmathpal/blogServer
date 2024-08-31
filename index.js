@@ -63,7 +63,7 @@ app.post("/register", async (req, res) => {
     );
   } catch (e) {
     console.log(e);
-    res.status(400).json({ error: e.message,code:e.code });
+    res.status(400).json({ error: e.message });
   }
 });
 
@@ -72,10 +72,6 @@ app.post("/login", async (req, res) => {
     const { username, password } = req.body;
     // console.log(req.body);
     const userDoc = await User.findOne({ username });
-    if(!userDoc)
-    {
-      res.status(400).json("wrong credentials");
-    }
     const passOk = bcrypt.compareSync(password, userDoc.password);
     console.log(passOk);
 
@@ -85,7 +81,7 @@ app.post("/login", async (req, res) => {
         { username, id: userDoc._id },
         secret,
         {
-          expiresIn: "1h",
+          expiresIn: "5h",
         },
         (err, token) => {
           // console.log(token);
@@ -209,6 +205,28 @@ app.get("/post", async (req, res) => {
       .sort({ createdAt: -1 })
       .limit(20)
   );
+});
+app.get("/mypost/:id", async (req, res) => {
+  let token = req.headers["x-access-token"];
+  if (!token || token == 'undefined' || token == 'null') return res.status(400).json({error: "No token in headers"})
+    let userid=null
+  jwt.verify(token, secret, {}, (err, info) => {
+    if (err) throw err;
+    userid=info
+  });
+  console.log(userid)
+  let postss=await Post.find({"author":userid.id})
+  .populate("author", ["username"])
+  .sort({ createdAt: -1 })
+  .limit(20)
+  res.json(
+
+    {
+      "post":postss,
+      "userinfo":userid
+    }
+  );
+ 
 });
 
 app.get("/post/:id", async (req, res) => {
